@@ -1,0 +1,4 @@
+fetch_electricity_usage:
+  description: |
+    Fetch the electricity usage from Tokyo Gas API. Note that it cannot fetch
+    realtime data.
