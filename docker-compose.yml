@@ -1,0 +1,8 @@
+services:
+  hass:
+    image: homeassistant/home-assistant
+    ports:
+      - 8123:8123
+    volumes:
+#      - ./docker-config:/config
+      - ./custom_components:/config/custom_components
