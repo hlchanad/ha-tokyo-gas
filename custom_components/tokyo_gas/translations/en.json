@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Enter your Tokyo Gas credentials to connect to the service.",
+        "data": {
+          "username": "E-mail",
+          "password": "Password"
+        }
+      }
+    }
+  }
+}

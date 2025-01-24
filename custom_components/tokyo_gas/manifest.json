@@ -2,5 +2,6 @@
   "version": "0.0.0",
   "name": "Tokyo Gas Integration",
   "codeowners": ["@hlchanad"],
-  "domain": "tokyo_gas"
+  "domain": "tokyo_gas",
+  "config_flow": true
 }

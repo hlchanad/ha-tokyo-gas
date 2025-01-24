@@ -1,0 +1,14 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "東京ガス統合",
+        "description": "東京ガスのログイン情報を入力ください。",
+        "data": {
+          "username": "メールアドレス",
+          "password": "パスワード"
+        }
+      }
+    }
+  }
+}
