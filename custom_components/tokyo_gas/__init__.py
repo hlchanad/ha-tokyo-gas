@@ -57,9 +57,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         date = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        date.replace(month=1, day=28) # TODO: remove me
+        date = date.replace(month=1, day=29) # TODO: remove me
 
-        insert_statistics(
+        await insert_statistics(
             hass=hass,
             statistic_id=get_statistic_id(entry.entry_id, STAT_ELECTRICITY_USAGE),
             name="Electricity Usage",  # TODO configurable at ConfigFlow
@@ -73,8 +73,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         handle_fetch_statistics,
         hour=23,  # TODO: configurable at ConfigFlow
-        minute=31,
-        second=10,
+        minute=53,
+        second=1,
     )
 
     _LOGGER.debug("async_setup_entry(), Scheduled handle_fetch_statistics()")
