@@ -6,3 +6,11 @@ services:
     volumes:
 #      - ./docker-config:/config
       - ./custom_components:/config/custom_components
+  tokyo_gas_scraper:
+    build:
+      context: addon
+      args:
+#        BUILD_FROM: ghcr.io/home-assistant/aarch64-base:latest # RPi
+        BUILD_FROM: ghcr.io/home-assistant/amd64-base:latest # Mac
+    ports:
+      - '8080:5000'
