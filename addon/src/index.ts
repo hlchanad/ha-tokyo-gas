@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import { TokyoGasScraper } from './tokyo-gas-scraper';
 
 const fastify = Fastify({
   logger: true
@@ -22,7 +23,10 @@ fastify.get(
   async (req, res) => {
     fastify.log.info('Retrieving electricity usages');
 
-    fastify.log.info(`query: ${JSON.stringify(req.query)}`);
+    const { username, password, customerNumber } = req.query as { username: string; password: string; customerNumber: string };
+
+    const scraper = await TokyoGasScraper(username, password, customerNumber, fastify.log);
+    await scraper.login();
 
     return [{ foo: 'bar'} ];
   },

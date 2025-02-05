@@ -7,16 +7,19 @@
     "prebuild": "rm -rf ./dist",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "start:dev": "ts-node ./src/index.ts",
     "start": "node ./dist/index.js"
   },
   "keywords": [],
   "author": "Hon Lun CHAN",
   "license": "ISC",
   "dependencies": {
-    "fastify": "^5.2.1"
+    "fastify": "^5.2.1",
+    "playwright": "^1.50.1"
   },
   "devDependencies": {
     "@types/node": "^22.13.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   }
 }

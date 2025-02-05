@@ -18,6 +18,14 @@ RUN npm run build
 
 FROM base
 
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont
+
 RUN npm ci --production
 
 COPY --from=builder /app/dist /app/dist
