@@ -15,20 +15,19 @@ fastify.get(
           username: { type: 'string' },
           password: { type: 'string' },
           customerNumber: { type: 'string' },
+          date: { type: 'string', format: 'date' },
         },
-        required: ['username', 'password', 'customerNumber'],
+        required: ['username', 'password', 'customerNumber', 'date'],
       },
     },
   },
   async (req, res) => {
     fastify.log.info('Retrieving electricity usages');
 
-    const { username, password, customerNumber } = req.query as { username: string; password: string; customerNumber: string };
+    const { username, password, customerNumber, date } = req.query as { username: string; password: string; customerNumber: string; date: string };
 
     const scraper = await TokyoGasScraper(username, password, customerNumber, fastify.log);
-    await scraper.login();
-
-    return [{ foo: 'bar'} ];
+    return scraper.fetchElectricityUsage(new Date(date));
   },
 );
 
