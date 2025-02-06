@@ -23,7 +23,7 @@ export async function TokyoGasScraper(
       }
 
       const body = await response.json();
-      return 'data' in body && 'hourlyElectricityUsage' in body.data;
+      return 'data' in body && key in body.data;
     });
   }
 
@@ -36,13 +36,49 @@ export async function TokyoGasScraper(
     await page.fill('input#loginId', username);
     await page.fill('input#password', password);
     await page.click('#submit-btn');
-    logger.debug('Submitted ')
+    logger.debug('Submitted credentials');
 
     await page.waitForURL(URL_DASHBOARD);
+    logger.debug('Logged in to TokyoGas');
   }
 
   async function navigateToHourlyElectricityUsage() {
     await page.goto(URL_ELECTRICITY_USAGE);
+    logger.debug('Navigated to Electricity Usage Page');
+  }
+
+  async function interceptElectricityUsageResponse(date: string) {
+    const isHourlyElectricityUsage = (postData: { operationName: string }): postData is {
+      operationName: 'HourlyElectricityUsage';
+      variables: {
+        targetDate: string | null;
+      }
+    } => postData.operationName === 'HourlyElectricityUsage';
+
+    // intercept request and response
+    await page.route(/graphql$/, async (route) => {
+      // postData will not be null if it's /graphql
+      const postData = JSON.parse(route.request().postData()!) as { operationName: string };
+
+      if (!isHourlyElectricityUsage(postData)) {
+        await route.continue();
+        return
+      }
+
+      postData.variables.targetDate = date;
+      await route.continue({ postData });
+    })
+    const responsePromise = spyOnGraphqlResponse('hourlyElectricityUsage');
+    logger.debug('Set interceptor for request and response');
+
+    // clicking 'Hour' trigger the graphql API
+    await page.getByRole('button', { name: '時間' }).click();
+
+    // get the intercepted response body
+    const response = await responsePromise;
+    const body = await response.json() as { data: { hourlyElectricityUsage: any[] }};
+
+    return body.data.hourlyElectricityUsage;
   }
 
   return {
@@ -51,12 +87,7 @@ export async function TokyoGasScraper(
 
       await navigateToHourlyElectricityUsage();
 
-      const responsePromise = spyOnGraphqlResponse('hourlyElectricityUsage');
-      await page.getByRole('button', { name: '時間' }).click();
-      const response = await responsePromise;
-      const body = await response.json() as { data: { hourlyElectricityUsage: any[] }};
-
-      return body.data.hourlyElectricityUsage;
+      return interceptElectricityUsageResponse(date);
     }
   };
 }

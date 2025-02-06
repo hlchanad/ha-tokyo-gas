@@ -27,7 +27,7 @@ fastify.get(
     const { username, password, customerNumber, date } = req.query as { username: string; password: string; customerNumber: string; date: string };
 
     const scraper = await TokyoGasScraper(username, password, customerNumber, fastify.log);
-    return scraper.fetchElectricityUsage(new Date(date));
+    return scraper.fetchElectricityUsage(date);
   },
 );
 
