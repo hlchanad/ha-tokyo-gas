@@ -10,8 +10,8 @@ export async function TokyoGasScraper(
 ) {
 
   const browser = await playwright.chromium.launch({
-    // executablePath: '/usr/bin/chromium-browser',
-    headless: false,
+    executablePath: '/usr/bin/chromium-browser',
+    // headless: false,
   });
   const context= await browser.newContext();
   const page = await context.newPage();
