@@ -1,6 +1,11 @@
+import logging
 import random
 from datetime import datetime, timedelta
 from typing import TypedDict, List
+
+import aiohttp
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class Usage(TypedDict):
@@ -13,21 +18,36 @@ class TokyoGas:
             self,
             username: str,
             password: str,
-            customer_number: str
+            customer_number: str,
+            domain: str,
     ):
         self._username = username
         self._password = password
         self._customer_number = customer_number
+        self._domain = domain
 
-    def fetch_electricity_usage(self, date: datetime) -> List[Usage]:
-        # TODO: dummy data temporarily
-        hourly_data = [random.uniform(1, 3) for _ in range(24)]
+    async def fetch_electricity_usage(
+            self,
+            session: aiohttp.ClientSession,
+            date: datetime,
+    ) -> List[Usage] | None:
+        try:
+            async with session.get(
+                    url=f"{self._domain}/electricity-usages",
+                    params={
+                        "username": self._username,
+                        "password": self._password,
+                        "customerNumber": self._customer_number,
+                        "date": date.strftime("%Y-%m-%d"),
+                    },
+                    timeout=60,  # scraper takes time
+            ) as response:
+                _LOGGER.debug("Got response from scraper, %s", await response.json())
 
-        start_date = date.replace(hour=0, minute=0, second=0, microsecond=0)
-
-        return [
-            Usage(
-                date=start_date + timedelta(hours=i),
-                usage=usage,
-            ) for i, usage in enumerate(hourly_data)
-        ]
+                return [Usage(
+                    date=datetime.fromisoformat(record["date"]),
+                    usage=record["usage"],
+                ) for record in await response.json()]
+        except Exception as error:
+            _LOGGER.error("Failed to get good response from scraper, %s", error)
+            return None

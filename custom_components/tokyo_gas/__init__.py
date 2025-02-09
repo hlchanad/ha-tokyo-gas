@@ -1,14 +1,15 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, UnitOfEnergy
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, CONF_CUSTOMER_NUMBER, STAT_ELECTRICITY_USAGE
-from .statistics import insert_statistics
+from .statistics import insert_statistics, get_last_statistics
 from .tokyo_gas import TokyoGas
 from .util import get_statistic_id
 
@@ -48,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         username=entry.data.get(CONF_USERNAME),
         password=entry.data.get(CONF_PASSWORD),
         customer_number=entry.data.get(CONF_CUSTOMER_NUMBER, "dummy"),  # TODO
+        domain="http://tokyo_gas_scraper:3000",  # TODO: Fix me with configuration
     )
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = _tokyo_gas
@@ -56,18 +58,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("handle_fetch_statistics(), now: %s", now)
 
         date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        date = date - timedelta(days=1)  # get data of yesterday
 
-        date = date.replace(month=1, day=29) # TODO: remove me
+        usages = await _tokyo_gas.fetch_electricity_usage(session=async_get_clientsession(hass), date=date)
+
+        if usages is None:
+            _LOGGER.info("Skip inserting statistics because no data are scrapped")
+            return
+
+        is_any_non_null_usage = len(list(filter(lambda record: record["usage"], usages))) > 0
+        if not is_any_non_null_usage:
+            _LOGGER.info("Skip inserting statistics because all usage are null")
+            return
+
+        statistic_id = get_statistic_id(entry.entry_id, STAT_ELECTRICITY_USAGE)
+
+        last_stat = await get_last_statistics(hass, statistic_id)
+        last_stat_date = datetime.fromtimestamp(last_stat[statistic_id].pop()["start"], timezone.utc)
+        first_new_stat_date = usages[0].get("date")
+
+        if first_new_stat_date <= last_stat_date:
+            _LOGGER.info("Skip inserting statistics because data exist on %s", date)
+            return
 
         await insert_statistics(
             hass=hass,
-            statistic_id=get_statistic_id(entry.entry_id, STAT_ELECTRICITY_USAGE),
+            statistic_id=statistic_id,
             name="Electricity Usage",  # TODO configurable at ConfigFlow
-            usages=_tokyo_gas.fetch_electricity_usage(date),
+            usages=usages,
             unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         )
 
-        _LOGGER.debug("added historical data for %s", date)
+        _LOGGER.info("added historical data for %s", date)
 
     async_track_time_change(
         hass,

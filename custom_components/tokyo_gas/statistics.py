@@ -3,7 +3,8 @@ from datetime import timezone
 from typing import List
 
 from homeassistant.components.recorder.models import StatisticMetaData, StatisticData
-from homeassistant.components.recorder.statistics import async_add_external_statistics, get_last_statistics
+from homeassistant.components.recorder.statistics import async_add_external_statistics, \
+    get_last_statistics as get_last_statistics_lib
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.recorder import get_instance
 
@@ -11,6 +12,20 @@ from .const import DOMAIN
 from .tokyo_gas import Usage
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def get_last_statistics(
+        hass: HomeAssistant,
+        statistic_id: str,
+):
+    return await get_instance(hass).async_add_executor_job(
+        get_last_statistics_lib,
+        hass,
+        1,
+        statistic_id,
+        False,
+        {"sum"},
+    )
 
 
 async def insert_statistics(
@@ -24,16 +39,9 @@ async def insert_statistics(
         _LOGGER.debug("No data in `usages`, skipping the process")
         return
 
-    last_stat = await get_instance(hass).async_add_executor_job(
-        get_last_statistics,
-        hass,
-        1,
-        statistic_id,
-        False,
-        {"sum"},
-    )
+    last_stat = await get_last_statistics(hass, statistic_id)
 
-    cumulative_sum = 0 if not last_stat else last_stat[statistic_id].pop()['sum']
+    cumulative_sum = 0 if not last_stat else last_stat[statistic_id].pop()["sum"]
 
     async_add_external_statistics(
         hass,
@@ -51,7 +59,7 @@ async def insert_statistics(
                 state=usage["usage"],
                 sum=(cumulative_sum := cumulative_sum + usage["usage"]),
             )
-            for usage in usages
+            for usage in usages if usage["usage"]
         ],
     )
 
