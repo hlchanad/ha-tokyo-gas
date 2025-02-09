@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         domain="http://tokyo_gas_scraper:3000",  # TODO: Fix me with configuration
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = _tokyo_gas
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = { "tokyo_gas": _tokyo_gas }
 
     async def handle_fetch_statistics(now: datetime):
         _LOGGER.debug("handle_fetch_statistics(), now: %s", now)
@@ -91,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         _LOGGER.info("added historical data for %s", date)
 
-    async_track_time_change(
+    unsubscribe = async_track_time_change(
         hass,
         handle_fetch_statistics,
         hour=23,  # TODO: configurable at ConfigFlow
@@ -99,6 +99,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         second=1,
     )
 
+    hass.data[DOMAIN][entry.entry_id]["unsubscribe"] = unsubscribe
+
     _LOGGER.debug("async_setup_entry(), Scheduled handle_fetch_statistics()")
+
+    return True
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    if entry.entry_id in hass.data.get(DOMAIN, {}):
+        entry_data = hass.data[DOMAIN][entry.entry_id]
+
+        if "unsubscribe" in entry_data:
+            entry_data["unsubscribe"]()
+
+        del hass.data[DOMAIN][entry.entry_id]
+
+        _LOGGER.info("Cleaned up data for integration (entry_id: %s)", entry.entry_id)
 
     return True
