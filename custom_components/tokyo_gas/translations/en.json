@@ -5,7 +5,14 @@
         "description": "Enter your Tokyo Gas credentials to connect to the service.",
         "data": {
           "username": "E-mail",
-          "password": "Password"
+          "password": "Password",
+          "customer_number": "Customer Number",
+          "domain": "Domain",
+          "trigger_time": "Scheduled time"
+        },
+        "data_description": {
+          "customer_number": "You may find this number after logging in to TokyoGas.",
+          "domain": "This is the domain of Tokyo Gas Scraper"
         }
       }
     }

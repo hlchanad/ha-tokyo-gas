@@ -1,4 +1,5 @@
 {
+  "title": "東京ガス統合",
   "config": {
     "step": {
       "user": {
@@ -6,7 +7,14 @@
         "description": "東京ガスのログイン情報を入力ください。",
         "data": {
           "username": "メールアドレス",
-          "password": "パスワード"
+          "password": "パスワード",
+          "customer_number": "お客さま番号",
+          "domain": "ドメイン",
+          "trigger_time": "予定時刻"
+        },
+        "data_description": {
+          "customer_number": "東京ガスにログインすると見つかります",
+          "domain": "こちらは東京ガススクレイパーのドメインです"
         }
       }
     }
