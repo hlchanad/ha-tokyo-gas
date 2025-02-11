@@ -31,12 +31,12 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    _LOGGER.info("async_setup_entry(), entry.entry_id: %s", entry.entry_id)
-    _LOGGER.info("async_setup_entry(), entry.data: %s", entry.data)
-    _LOGGER.info("async_setup_entry(), entry.unique_id: %s", entry.unique_id)
-    _LOGGER.info("async_setup_entry(), entry.domain: %s", entry.domain)
-    _LOGGER.info("async_setup_entry(), entry.source: %s", entry.source)
-    _LOGGER.info("async_setup_entry(), entry.state: %s", entry.state)
+    _LOGGER.debug("async_setup_entry(), entry.entry_id: %s", entry.entry_id)
+    _LOGGER.debug("async_setup_entry(), entry.data: %s", entry.data)
+    _LOGGER.debug("async_setup_entry(), entry.unique_id: %s", entry.unique_id)
+    _LOGGER.debug("async_setup_entry(), entry.domain: %s", entry.domain)
+    _LOGGER.debug("async_setup_entry(), entry.source: %s", entry.source)
+    _LOGGER.debug("async_setup_entry(), entry.state: %s", entry.state)
 
     # entry.entry_id: 01JJAZ5GWMK3WCDRZQADJVMDRH
     # entry.data: {'username': 'test@example.com', 'password': 'aA123456'}
@@ -74,12 +74,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         statistic_id = get_statistic_id(entry.entry_id, STAT_ELECTRICITY_USAGE)
 
         last_stat = await get_last_statistics(hass, statistic_id)
-        last_stat_date = datetime.fromtimestamp(last_stat[statistic_id].pop()["start"], timezone.utc)
-        first_new_stat_date = usages[0].get("date")
+        if last_stat:
+            last_stat_date = datetime.fromtimestamp(last_stat[statistic_id].pop()["start"], timezone.utc)
+            first_new_stat_date = usages[0].get("date")
 
-        if first_new_stat_date <= last_stat_date:
-            _LOGGER.info("Skip inserting statistics because data exist on %s", date)
-            return
+            if first_new_stat_date <= last_stat_date:
+                _LOGGER.info("Skip inserting statistics because data exist on %s", date)
+                return
 
         await insert_statistics(
             hass=hass,
@@ -90,6 +91,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
         _LOGGER.info("added historical data for %s", date)
+
+    if hass.data[DOMAIN][entry.entry_id] is not None \
+            and hass.data[DOMAIN][entry.entry_id]["unsubscribe"] is not None:
+        _LOGGER.debug("Somehow there is a existing schedule, unsubscribing to prevent memory leak")
+        hass.data[DOMAIN][entry.entry_id]["unsubscribe"]()
 
     hour, minute, second = entry.data.get(CONF_TRIGGER_TIME).split(":")
 
