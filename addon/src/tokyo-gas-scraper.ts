@@ -1,6 +1,6 @@
 import playwright from 'playwright';
 import { URL_DASHBOARD, URL_ELECTRICITY_USAGE, URL_LOGIN, URL_TOP_PAGE } from './constant';
-import { Logger } from './types';
+import { Logger, Usage } from './types';
 
 export async function TokyoGasScraper(
   username: string,
@@ -37,9 +37,6 @@ export async function TokyoGasScraper(
     await page.fill('input#password', password);
     await page.click('#submit-btn');
     logger.debug('Submitted credentials');
-
-    await page.waitForURL(URL_DASHBOARD);
-    logger.debug('Logged in to TokyoGas');
   }
 
   async function navigateToHourlyElectricityUsage() {
@@ -47,7 +44,7 @@ export async function TokyoGasScraper(
     logger.debug('Navigated to Electricity Usage Page');
   }
 
-  async function interceptElectricityUsageResponse(date: string) {
+  async function interceptElectricityUsageResponse(date: string): Promise<Usage[]> {
     const isHourlyElectricityUsage = (postData: { operationName: string }): postData is {
       operationName: 'HourlyElectricityUsage';
       variables: {
@@ -82,12 +79,30 @@ export async function TokyoGasScraper(
   }
 
   return {
+    async verifyCredentials() {
+      await login();
+
+      const result = await Promise.race([
+        page.waitForURL(URL_DASHBOARD),
+        page.waitForSelector('text="「ログインID」もしくは「パスワード」が正しくありません。"'),
+      ]);
+
+      return !result; // waitForUrl return nothing if it succeeds
+    },
     async fetchElectricityUsage(date: string) {
       await login();
 
+      await page.waitForURL(URL_DASHBOARD);
+      logger.debug('Logged in to TokyoGas');
+
       await navigateToHourlyElectricityUsage();
 
-      return interceptElectricityUsageResponse(date);
+      const data = await interceptElectricityUsageResponse(date);
+
+      // sort the data by date in ascending order
+      data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      return data;
     }
   };
 }
