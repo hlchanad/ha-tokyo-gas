@@ -8,7 +8,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, CONF_CUSTOMER_NUMBER, STAT_ELECTRICITY_USAGE, CONF_STAT_LABEL_ELECTRICITY_USAGE
+from .const import DOMAIN, CONF_CUSTOMER_NUMBER, STAT_ELECTRICITY_USAGE, CONF_STAT_LABEL_ELECTRICITY_USAGE, PLATFORMS
 from .statistics import insert_statistics, get_last_statistics
 from .tokyo_gas import TokyoGas
 from .util import get_statistic_id
@@ -113,6 +113,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.info("Scheduled data fetching at %s:%s:%s everyday", hour, minute, second)
 
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
 
 
@@ -126,5 +128,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         del hass.data[DOMAIN][entry.entry_id]
 
         _LOGGER.info("Cleaned up data for integration (entry_id: %s)", entry.entry_id)
+
+    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     return True

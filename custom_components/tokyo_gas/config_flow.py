@@ -10,7 +10,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import TextSelector, TextSelectorType, TextSelectorConfig, TimeSelector, \
     TimeSelectorConfig
 
-from . import DOMAIN, CONF_CUSTOMER_NUMBER, TokyoGas, CONF_STAT_LABEL_ELECTRICITY_USAGE
+from .const import DOMAIN, CONF_CUSTOMER_NUMBER, CONF_STAT_LABEL_ELECTRICITY_USAGE
+from .tokyo_gas import TokyoGas
 
 _LOGGER = logging.getLogger(__name__)
 
