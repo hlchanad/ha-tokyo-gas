@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _tokyo_gas = TokyoGas(
         username=entry.data.get(CONF_USERNAME),
         password=entry.data.get(CONF_PASSWORD),
-        customer_number=entry.data.get(CONF_CUSTOMER_NUMBER, "dummy"),  # TODO
+        customer_number=entry.data.get(CONF_CUSTOMER_NUMBER),
         domain=entry.data.get(CONF_DOMAIN),
     )
 

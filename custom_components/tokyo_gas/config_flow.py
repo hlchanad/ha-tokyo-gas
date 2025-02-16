@@ -29,7 +29,7 @@ class TokyoGasConfigFlow(ConfigFlow, domain=DOMAIN):
             _tokyo_gas = TokyoGas(
                 username=user_input.get(CONF_USERNAME),
                 password=user_input.get(CONF_PASSWORD),
-                customer_number=user_input.get(CONF_CUSTOMER_NUMBER, "dummy"),  # TODO
+                customer_number=user_input.get(CONF_CUSTOMER_NUMBER),
                 domain=user_input.get(CONF_DOMAIN),
             )
 
