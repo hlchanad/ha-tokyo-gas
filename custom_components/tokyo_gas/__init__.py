@@ -8,7 +8,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, CONF_CUSTOMER_NUMBER, STAT_ELECTRICITY_USAGE
+from .const import DOMAIN, CONF_CUSTOMER_NUMBER, STAT_ELECTRICITY_USAGE, CONF_STAT_LABEL_ELECTRICITY_USAGE
 from .statistics import insert_statistics, get_last_statistics
 from .tokyo_gas import TokyoGas
 from .util import get_statistic_id
@@ -85,7 +85,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await insert_statistics(
             hass=hass,
             statistic_id=statistic_id,
-            name="Electricity Usage",  # TODO configurable at ConfigFlow
+            name=entry.data.get(
+                CONF_STAT_LABEL_ELECTRICITY_USAGE,
+                f"Electricity Usage ({entry.data.get(CONF_USERNAME)})"
+            ),
             usages=usages,
             unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         )

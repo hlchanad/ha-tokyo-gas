@@ -10,11 +10,13 @@
           "password": "パスワード",
           "customer_number": "お客さま番号",
           "domain": "ドメイン",
-          "trigger_time": "予定時刻"
+          "trigger_time": "予定時刻",
+          "electricity_usage_label": "電力使用ラベル"
         },
         "data_description": {
           "customer_number": "東京ガスにログインすると見つかります",
-          "domain": "こちらは東京ガススクレイパーのドメインです"
+          "domain": "こちらは東京ガススクレイパーのドメインです",
+          "electricity_usage_label": "デフォルトのラベルは `Electricity Usage ('{ email }')` になります。"
         }
       }
     },
