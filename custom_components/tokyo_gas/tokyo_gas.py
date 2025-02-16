@@ -1,6 +1,5 @@
 import logging
-import random
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import TypedDict, List
 
 import aiohttp
@@ -25,6 +24,22 @@ class TokyoGas:
         self._password = password
         self._customer_number = customer_number
         self._domain = domain
+
+    async def verify_credentials(
+            self,
+            session: aiohttp.ClientSession,
+    ) -> bool:
+        async with session.post(
+                url=f"{self._domain}/login",
+                json={
+                    "username": self._username,
+                    "password": self._password,
+                    "customerNumber": self._customer_number,
+                },
+        ) as response:
+            _LOGGER.info("Login result, status: %s", response.status)
+            return 200 <= response.status < 300
+
 
     async def fetch_electricity_usage(
             self,

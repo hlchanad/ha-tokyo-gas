@@ -92,8 +92,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         _LOGGER.info("added historical data for %s", date)
 
-    if hass.data[DOMAIN][entry.entry_id] is not None \
-            and hass.data[DOMAIN][entry.entry_id]["unsubscribe"] is not None:
+    if DOMAIN in hass.data \
+            and entry.entry_id in hass.data[DOMAIN] \
+            and "unsubscribe" in hass.data[DOMAIN][entry.entry_id]:
         _LOGGER.debug("Somehow there is a existing schedule, unsubscribing to prevent memory leak")
         hass.data[DOMAIN][entry.entry_id]["unsubscribe"]()
 
