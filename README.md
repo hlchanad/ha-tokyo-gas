@@ -5,6 +5,7 @@ into Home Assistant by addon and custom component. You may add the scraped
 statistics to the Energy dashboard.
 
 ![energy-dashboard](assets/energy-dashboard.png)
+![tokyo-gas-dashboard](assets/tokyo-gas-dashboard.png)
 
 > [!WARNING]
 > This is still **under construction**. It might be unstable and use it on your
