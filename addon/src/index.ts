@@ -58,7 +58,7 @@ fastify.get(
   },
 );
 
-const port = 3000;
+const port = 8000;
 fastify.listen({ host: '0.0.0.0', port })
   .catch(err => {
     fastify.log.error(err);

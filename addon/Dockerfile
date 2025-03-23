@@ -5,13 +5,13 @@ WORKDIR /app
 
 RUN apk add --no-cache nodejs npm
 
-COPY package* /app
+COPY package* /app/
 
 FROM base AS builder
 
 RUN npm ci
 
-COPY ./src /app/src
+COPY ./src /app/src/
 COPY tsconfig.json /app/tsconfig.json
 
 RUN npm run build
@@ -28,6 +28,6 @@ RUN apk add --no-cache \
 
 RUN npm ci --production
 
-COPY --from=builder /app/dist /app/dist
+COPY --from=builder /app/dist /app/dist/
 
 CMD ["npm", "start"]
