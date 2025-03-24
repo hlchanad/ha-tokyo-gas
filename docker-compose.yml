@@ -4,8 +4,7 @@ services:
     ports:
       - '8123:8123'
     volumes:
-#      - ./docker-config:/config
-      - ./custom_components:/config/custom_components
+      - ./custom_component:/config/custom_components/tokyo_gas
   tokyo_gas_scraper:
     build:
       context: addon
@@ -13,4 +12,4 @@ services:
 #        BUILD_FROM: ghcr.io/home-assistant/aarch64-base:latest # RPi
         BUILD_FROM: ghcr.io/home-assistant/amd64-base:latest # Mac
     ports:
-      - '3000:3000'
+      - '8000:8000'

@@ -79,7 +79,7 @@ class TokyoGasConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_CUSTOMER_NUMBER): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.TEXT)
                 ),
-                vol.Required(CONF_DOMAIN, default="http://tokyo_gas_scraper:3000"): TextSelector(
+                vol.Required(CONF_DOMAIN, default="http://tokyo_gas_scraper:8000"): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.URL)
                 ),
                 vol.Required(CONF_TRIGGER_TIME, default="14:00:00"): TimeSelector(

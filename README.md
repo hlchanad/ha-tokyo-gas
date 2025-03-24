@@ -19,7 +19,7 @@ statistics to the Energy dashboard.
 
 ### Addon
 
-1. Copy the whole `/addon` folder to `/addons/local` in your Home Assistant 
+1. Copy the whole `/addon` folder to `/addons/local/tokyo-gas-scraper` in your Home Assistant 
    instance
 2. Restart the Home Assistant instance
 3. Navigate to `Settings` > `Add-ons` > `Add-on Store` 
@@ -29,7 +29,7 @@ statistics to the Energy dashboard.
 
 ### Custom Component
 
-1. Copy the whole `/custom_components/tokyo_gas` folder to 
+1. Copy the whole `/custom_component` folder to 
    `/config/custom_components/tokyo_gas` in your Home Assistant instance
 2. Restart the Home Assistant instance
 3. Navigate to `Settings` > `Devices & services` > `Add Integration`
