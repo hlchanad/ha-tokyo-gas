@@ -1,3 +1,5 @@
+"""Util methods for wrapping HA statistics related logic"""
+
 import logging
 from datetime import timezone
 from typing import List
@@ -18,6 +20,8 @@ async def get_last_statistics(
         hass: HomeAssistant,
         statistic_id: str,
 ):
+    """Return the last statistics of a specific statistic_id"""
+
     return await get_instance(hass).async_add_executor_job(
         get_last_statistics_lib,
         hass,
@@ -35,6 +39,8 @@ async def insert_statistics(
         usages: List[Usage],
         unit_of_measurement: str,
 ):
+    """Insert a list of records to a specific statistic_id"""
+
     if not usages:
         _LOGGER.debug("No data in `usages`, skipping the process")
         return
@@ -63,4 +69,4 @@ async def insert_statistics(
         ],
     )
 
-    _LOGGER.debug(f"Inserted data for {statistic_id}")
+    _LOGGER.debug("Inserted data for %s", statistic_id)

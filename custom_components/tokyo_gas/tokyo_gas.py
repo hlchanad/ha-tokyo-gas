@@ -1,3 +1,5 @@
+"""Wrap API calls to the custom addon, which scrapes data from TokyoGas"""
+
 import logging
 from datetime import datetime
 from typing import TypedDict, List
@@ -8,11 +10,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Usage(TypedDict):
+    """Typed Dict for the daily usage"""
     date: datetime
     usage: float
 
 
 class TokyoGas:
+    """Wrapper for API calls to the custom addon"""
+
     def __init__(
             self,
             username: str,
@@ -29,6 +34,8 @@ class TokyoGas:
             self,
             session: aiohttp.ClientSession,
     ) -> bool:
+        """Call the POST /login API to see if the credentials are good"""
+
         async with session.post(
                 url=f"{self._domain}/login",
                 json={
@@ -46,6 +53,8 @@ class TokyoGas:
             session: aiohttp.ClientSession,
             date: datetime,
     ) -> List[Usage] | None:
+        """Call the GET /electricity-usages API to fetch daily electricity usage"""
+
         try:
             async with session.get(
                     url=f"{self._domain}/electricity-usages",

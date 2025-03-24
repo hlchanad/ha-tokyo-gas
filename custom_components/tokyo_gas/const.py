@@ -1,3 +1,5 @@
+"""Constants file"""
+
 from homeassistant.const import Platform
 
 DOMAIN = "tokyo_gas"

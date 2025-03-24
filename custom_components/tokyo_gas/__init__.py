@@ -1,14 +1,33 @@
+"""
+Set up everything for TokyoGas custom component.
+Forward platform settings.
+Schedule daily tasks.
+"""
+
 import logging
 from datetime import datetime, timezone, timedelta
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, UnitOfEnergy, CONF_DOMAIN, CONF_TRIGGER_TIME
+from homeassistant.const import (
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    UnitOfEnergy,
+    CONF_DOMAIN,
+    CONF_TRIGGER_TIME,
+)
+
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, CONF_CUSTOMER_NUMBER, STAT_ELECTRICITY_USAGE, CONF_STAT_LABEL_ELECTRICITY_USAGE, PLATFORMS
+from .const import (
+    DOMAIN,
+    CONF_CUSTOMER_NUMBER,
+    STAT_ELECTRICITY_USAGE,
+    CONF_STAT_LABEL_ELECTRICITY_USAGE,
+    PLATFORMS,
+)
 from .statistics import insert_statistics, get_last_statistics
 from .tokyo_gas import TokyoGas
 from .util import get_statistic_id
@@ -16,6 +35,7 @@ from .util import get_statistic_id
 _LOGGER = logging.getLogger(__name__)
 
 
+# pylint: disable=unused-argument
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up is called when Home Assistant is loading our component."""
 
@@ -31,6 +51,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up the entry (created via 'Devices/ Services')"""
+
     _LOGGER.debug("async_setup_entry(), entry.entry_id: %s", entry.entry_id)
     _LOGGER.debug("async_setup_entry(), entry.data: %s", entry.data)
     _LOGGER.debug("async_setup_entry(), entry.unique_id: %s", entry.unique_id)
@@ -60,7 +82,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         date = now.replace(hour=0, minute=0, second=0, microsecond=0)
         date = date - timedelta(days=1)  # get data of yesterday
 
-        usages = await _tokyo_gas.fetch_electricity_usage(session=async_get_clientsession(hass), date=date)
+        usages = await _tokyo_gas.fetch_electricity_usage(
+            session=async_get_clientsession(hass),
+            date=date,
+        )
 
         if usages is None:
             _LOGGER.info("Skip inserting statistics because no data are scrapped")
@@ -75,7 +100,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         last_stat = await get_last_statistics(hass, statistic_id)
         if last_stat:
-            last_stat_date = datetime.fromtimestamp(last_stat[statistic_id].pop()["start"], timezone.utc)
+            last_stat_date = datetime.fromtimestamp(
+                last_stat[statistic_id].pop()["start"],
+                timezone.utc,
+            )
             first_new_stat_date = usages[0].get("date")
 
             if first_new_stat_date <= last_stat_date:
@@ -119,6 +147,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload the entry (created via 'Devices/ Services')"""
+
     if entry.entry_id in hass.data.get(DOMAIN, {}):
         entry_data = hass.data[DOMAIN][entry.entry_id]
 
