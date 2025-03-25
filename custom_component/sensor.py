@@ -42,7 +42,7 @@ class TokyoGasSensor(SensorEntity):
             value: str = None,
     ):
         self.entity_description = entity_description
-        self._attr_unique_id = f"{entry_id}_electricity_usage_statistic_id" # TODO a bit weird?
+        self._attr_unique_id = f"{entry_id}_{entity_description.key}"
         self.entity_id = f"{DOMAIN}.{self._attr_unique_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},

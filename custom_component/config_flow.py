@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Self
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigFlowResult, ConfigFlow
@@ -89,3 +89,7 @@ class TokyoGasConfigFlow(ConfigFlow, domain=DOMAIN):
             }),
             errors=errors,
         )
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow matches this flow (not used for user flow)."""
+        return False  # Always false since we rely on unique_id
