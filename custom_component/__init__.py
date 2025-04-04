@@ -15,10 +15,10 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_TRIGGER_TIME,
 )
-
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.issue_registry import async_create_issue, IssueSeverity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -88,7 +88,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
         if usages is None:
-            _LOGGER.info("Skip inserting statistics because no data are scrapped")
+            # Raise a HA issue to draw attention
+            async_create_issue(
+                hass=hass,
+                domain=DOMAIN,
+                issue_id=f"{entry.entry_id}_electricity_usage",
+                is_fixable=False,
+                is_persistent=True,
+                severity=IssueSeverity.ERROR,
+                translation_key="electricity_usage_error_api_fetch_failure",
+            )
+
+            _LOGGER.error("No data is scraped, reported a HA issue.")
             return
 
         is_any_non_null_usage = len(list(filter(lambda record: record["usage"], usages))) > 0

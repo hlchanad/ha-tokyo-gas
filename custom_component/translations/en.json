@@ -24,5 +24,11 @@
       "invalid_credentials": "Invalid Credentials",
       "network_error": "Network Error. Please verify the Tokyo Gas Scraper is working."
     }
+  },
+  "issues": {
+    "electricity_usage_error_api_fetch_failure":{
+      "title": "Failed to fetch electricity data",
+      "description": "Please run the tokyo_gas.fetch_electricity_usage to fix the data."
+    }
   }
 }

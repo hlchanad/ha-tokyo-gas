@@ -24,5 +24,11 @@
       "invalid_credentials": "無効な認証情報",
       "network_error": "ネットワークエラー。東京ガススクレイパーが動作していることを確認してください。"
     }
+  },
+  "issues": {
+    "electricity_usage_error_api_fetch_failure": {
+      "title": "電力データの取得に失敗しました",
+      "description": "データを修正するには、tokyo_gas.fetch_electricity_usage を実行してください。"
+    }
   }
 }
