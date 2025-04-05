@@ -2,3 +2,21 @@ fetch_electricity_usage:
   description: |
     Fetch the electricity usage from Tokyo Gas API. Note that it cannot fetch
     realtime data.
+  fields:
+    statistic:
+      required: true
+      selector:
+        entity:
+          filter:
+            - integration: tokyo_gas
+              domain: sensor
+    delta_days:
+      required: true
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 14
+          step: 1
+          unit_of_measurement: day(s)
+          mode: slider

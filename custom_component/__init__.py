@@ -28,6 +28,7 @@ from .const import (
     CONF_STAT_LABEL_ELECTRICITY_USAGE,
     PLATFORMS,
 )
+from .fetch_electricity_usage import handle_fetch_electricity_usage
 from .statistics import insert_statistics, get_last_statistics
 from .tokyo_gas import TokyoGas
 from .util import get_statistic_id
@@ -39,12 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up is called when Home Assistant is loading our component."""
 
-    def handle_fetch_electricity_usage(call: ServiceCall):
-        """Handle the service action call."""
-        _LOGGER.info("Service called: %s.%s", call.domain, call.service)
-        _LOGGER.info("Service data: %s", call.data)
-        _LOGGER.info("Service context: %s", call.context.as_dict())
-
+    # Setup custom services
     hass.services.register(DOMAIN, "fetch_electricity_usage", handle_fetch_electricity_usage)
 
     return True

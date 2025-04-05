@@ -1,14 +1,14 @@
 """Util methods for wrapping HA statistics related logic"""
 
 import logging
-from datetime import timezone
-from typing import List
+from datetime import timezone, datetime
+from typing import List, Optional
 
 from homeassistant.components.recorder.models import StatisticMetaData, StatisticData
-from homeassistant.components.recorder.statistics import async_add_external_statistics, \
-    get_last_statistics as get_last_statistics_lib
+from homeassistant.components.recorder.statistics import async_add_external_statistics
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.recorder import get_instance
+from sqlalchemy import text
 
 from .const import DOMAIN
 from .tokyo_gas import Usage
@@ -16,20 +16,57 @@ from .tokyo_gas import Usage
 _LOGGER = logging.getLogger(__name__)
 
 
+def _get_last_statistics(
+        hass: HomeAssistant,
+        statistic_id: str,
+        date: Optional[datetime] = None,
+):
+    """Query database to get the last statistic record, w.r.t. `date`"""
+
+    with get_instance(hass).engine.connect() as connection:
+        query = text("""
+               SELECT 
+                   s.start_ts, 
+                   s.state, 
+                   s.sum
+               FROM statistics s
+               LEFT JOIN statistics_meta sm ON s.metadata_id = sm.id
+               WHERE
+                   sm.statistic_id = :statistic_id
+                   AND (:timestamp IS NULL OR s.start_ts < :timestamp)
+               ORDER BY s.start_ts DESC
+               LIMIT 1
+           """)
+
+        result = connection.execute(query, {
+            "statistic_id": statistic_id,
+            "timestamp": datetime.timestamp(date) if date else None,
+        }).fetchone()
+
+        _LOGGER.debug("DB query result: %s", result)
+
+        return {
+            "start_ts": result[0],
+            "state": result[1],
+            "sum": result[2]
+        } if result else None
+
+
 async def get_last_statistics(
         hass: HomeAssistant,
         statistic_id: str,
+        date: Optional[datetime] = None,
 ):
     """Return the last statistics of a specific statistic_id"""
 
-    return await get_instance(hass).async_add_executor_job(
-        get_last_statistics_lib,
+    result = await get_instance(hass).async_add_executor_job(
+        _get_last_statistics,
         hass,
-        1,
         statistic_id,
-        False,
-        {"sum"},
+        date,
     )
+
+    return result
 
 
 async def insert_statistics(
@@ -45,9 +82,16 @@ async def insert_statistics(
         _LOGGER.debug("No data in `usages`, skipping the process")
         return
 
-    last_stat = await get_last_statistics(hass, statistic_id)
+    last_stat = await get_last_statistics(hass, statistic_id, usages[0]["date"])
 
-    cumulative_sum = 0 if not last_stat else last_stat[statistic_id].pop()["sum"]
+    cumulative_sum = 0 if not last_stat else last_stat["sum"]
+
+    _LOGGER.debug(
+        "first datetime: %s, last_stat: %s, cumulative_sum: %s",
+        usages[0]["date"],
+        last_stat,
+        cumulative_sum
+    )
 
     async_add_external_statistics(
         hass,
