@@ -30,18 +30,18 @@ export async function TokyoGasScraper(
   async function login() {
     await page.goto(URL_TOP_PAGE);
     await page.getByRole('link', { name: 'ログイン', exact: false }).first().click();
-    logger.debug('Clicked login button');
+    logger.info('Clicked login button');
 
     await page.waitForURL(URL_LOGIN);
     await page.fill('input#loginId', username);
     await page.fill('input#password', password);
     await page.click('#submit-btn');
-    logger.debug('Submitted credentials');
+    logger.info('Submitted credentials');
   }
 
   async function navigateToHourlyElectricityUsage() {
     await page.goto(URL_ELECTRICITY_USAGE);
-    logger.debug('Navigated to Electricity Usage Page');
+    logger.info('Navigated to Electricity Usage Page');
   }
 
   async function interceptElectricityUsageResponse(date: string): Promise<Usage[]> {
@@ -66,7 +66,7 @@ export async function TokyoGasScraper(
       await route.continue({ postData });
     })
     const responsePromise = spyOnGraphqlResponse('hourlyElectricityUsage');
-    logger.debug('Set interceptor for request and response');
+    logger.info('Set interceptor for request and response');
 
     // clicking 'Hour' trigger the graphql API
     await page.getByRole('button', { name: '時間' }).click();
@@ -87,13 +87,16 @@ export async function TokyoGasScraper(
         page.waitForSelector('text="「ログインID」もしくは「パスワード」が正しくありません。"'),
       ]);
 
+      await browser.close();
+      logger.info('Closed browser');
+
       return !result; // waitForUrl return nothing if it succeeds
     },
     async fetchElectricityUsage(date: string) {
       await login();
 
       await page.waitForURL(URL_DASHBOARD);
-      logger.debug('Logged in to TokyoGas');
+      logger.info('Logged in to TokyoGas');
 
       await navigateToHourlyElectricityUsage();
 
@@ -101,6 +104,9 @@ export async function TokyoGasScraper(
 
       // sort the data by date in ascending order
       data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+      await browser.close();
+      logger.info('Closed browser');
 
       return data;
     }
