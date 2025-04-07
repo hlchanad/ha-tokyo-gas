@@ -1,14 +1,17 @@
 import logging
 from datetime import datetime, timedelta
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, CONF_USERNAME
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import DOMAIN, CONF_STAT_LABEL_ELECTRICITY_USAGE
-from .statistics import get_last_statistics, insert_statistics
+from .const import DOMAIN, CONF_STAT_LABEL_ELECTRICITY_USAGE, STAT_ELECTRICITY_USAGE
+from .statistics import insert_statistics
 from .tokyo_gas import TokyoGas
+from .util import get_statistic_id, get_statistic_name_for_electricity_usage
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +34,7 @@ async def _fetch_electricity_usages(
     )
 
     if usages is None:
+        # usages will be None if fail to fetch API
         if report_issues:
             # Raise a HA issue to draw attention
             async_create_issue(
@@ -60,35 +64,53 @@ async def _fetch_electricity_usages(
         unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     )
 
-    _LOGGER.info("added historical data for %s", date)
+    _LOGGER.info("added historical data for %s", date.date())
 
 
-async def handle_fetch_electricity_usage(call: ServiceCall):
+async def handle_service_fetch_electricity_usage(call: ServiceCall):
     """Handle the service action call."""
 
     # Service Call args
     entity_id = call.data["statistic"]
     delta_days = call.data["delta_days"]
 
-    # Get config_entry/ data from hass
-    entry = call.hass.data["entity_registry"].async_get(entity_id)
+    # Get config_entry from hass
+    entry: RegistryEntry | None = call.hass.data["entity_registry"].async_get(entity_id)
     if not entry or not entry.config_entry_id:
-        _LOGGER.error("Failed to find the entry data in TokyoGas integration")
         raise Exception("Failed to find the entry data in TokyoGas integration")
 
     # Prepare variables for fetching electricity usages
-    config_entry = call.hass.config_entries.async_get_entry(entry.config_entry_id)
-    _tokyo_gas = call.hass.data.get(DOMAIN)[entry.config_entry_id]["tokyo_gas"]
+    config_entry: ConfigEntry = call.hass.config_entries.async_get_entry(entry.config_entry_id)
+    tokyo_gas = call.hass.data.get(DOMAIN)[entry.config_entry_id]["tokyo_gas"]
     statistic_id = call.hass.states.get(entity_id).state
 
     await _fetch_electricity_usages(
         hass=call.hass,
-        tokyo_gas=_tokyo_gas,
+        tokyo_gas=tokyo_gas,
         statistic_id=statistic_id,
-        statistic_name=config_entry.data.get(
-            CONF_STAT_LABEL_ELECTRICITY_USAGE,
-            f"Electricity Usage ({config_entry.data.get(CONF_USERNAME)})"
-        ),
+        statistic_name=get_statistic_name_for_electricity_usage(config_entry),
         delta_days=delta_days,
         report_issues=False,
     )
+
+
+def create_schedule_handler_for_fetch_electricity_usage(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        tokyo_gas: TokyoGas,
+):
+    """Create a handler for the hass scheduler"""
+
+    async def handle_scheduler_fetch_electricity_usage(now: datetime):
+        """Handle the hass scheduler call"""
+
+        await _fetch_electricity_usages(
+            hass=hass,
+            tokyo_gas=tokyo_gas,
+            statistic_id=get_statistic_id(config_entry.entry_id, STAT_ELECTRICITY_USAGE),
+            statistic_name=get_statistic_name_for_electricity_usage(config_entry),
+            delta_days=1,
+            report_issues=True,
+        )
+
+    return handle_scheduler_fetch_electricity_usage

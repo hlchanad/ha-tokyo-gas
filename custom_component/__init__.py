@@ -5,20 +5,16 @@ Schedule daily tasks.
 """
 
 import logging
-from datetime import datetime, timezone, timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_USERNAME,
     CONF_PASSWORD,
-    UnitOfEnergy,
     CONF_DOMAIN,
     CONF_TRIGGER_TIME,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_change
-from homeassistant.helpers.issue_registry import async_create_issue, IssueSeverity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -28,7 +24,8 @@ from .const import (
     CONF_STAT_LABEL_ELECTRICITY_USAGE,
     PLATFORMS,
 )
-from .fetch_electricity_usage import handle_fetch_electricity_usage
+from .fetch_electricity_usage import handle_service_fetch_electricity_usage, \
+    create_schedule_handler_for_fetch_electricity_usage
 from .statistics import insert_statistics, get_last_statistics
 from .tokyo_gas import TokyoGas
 from .util import get_statistic_id
@@ -41,7 +38,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up is called when Home Assistant is loading our component."""
 
     # Setup custom services
-    hass.services.register(DOMAIN, "fetch_electricity_usage", handle_fetch_electricity_usage)
+    hass.services.register(DOMAIN, "fetch_electricity_usage", handle_service_fetch_electricity_usage)
 
     return True
 
@@ -72,64 +69,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"tokyo_gas": _tokyo_gas}
 
-    async def handle_fetch_statistics(now: datetime):
-        _LOGGER.debug("handle_fetch_statistics(), now: %s", now)
-
-        date = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        date = date - timedelta(days=1)  # get data of yesterday
-
-        usages = await _tokyo_gas.fetch_electricity_usage(
-            session=async_get_clientsession(hass),
-            date=date,
-        )
-
-        if usages is None:
-            # Raise a HA issue to draw attention
-            async_create_issue(
-                hass=hass,
-                domain=DOMAIN,
-                issue_id=f"{entry.entry_id}_electricity_usage",
-                is_fixable=False,
-                is_persistent=True,
-                severity=IssueSeverity.ERROR,
-                translation_key="electricity_usage_error_api_fetch_failure",
-            )
-
-            _LOGGER.error("No data is scraped, reported a HA issue.")
-            return
-
-        is_any_non_null_usage = len(list(filter(lambda record: record["usage"], usages))) > 0
-        if not is_any_non_null_usage:
-            _LOGGER.info("Skip inserting statistics because all usage are null")
-            return
-
-        statistic_id = get_statistic_id(entry.entry_id, STAT_ELECTRICITY_USAGE)
-
-        last_stat = await get_last_statistics(hass, statistic_id)
-        if last_stat:
-            last_stat_date = datetime.fromtimestamp(
-                last_stat[statistic_id].pop()["start"],
-                timezone.utc,
-            )
-            first_new_stat_date = usages[0].get("date")
-
-            if first_new_stat_date <= last_stat_date:
-                _LOGGER.info("Skip inserting statistics because data exist on %s", date)
-                return
-
-        await insert_statistics(
-            hass=hass,
-            statistic_id=statistic_id,
-            name=entry.data.get(
-                CONF_STAT_LABEL_ELECTRICITY_USAGE,
-                f"Electricity Usage ({entry.data.get(CONF_USERNAME)})"
-            ),
-            usages=usages,
-            unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        )
-
-        _LOGGER.info("added historical data for %s", date)
-
     if DOMAIN in hass.data \
             and entry.entry_id in hass.data[DOMAIN] \
             and "unsubscribe" in hass.data[DOMAIN][entry.entry_id]:
@@ -140,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN][entry.entry_id]["unsubscribe"] = async_track_time_change(
         hass,
-        handle_fetch_statistics,
+        create_schedule_handler_for_fetch_electricity_usage(hass, entry, _tokyo_gas),
         hour=hour,
         minute=minute,
         second=second,
