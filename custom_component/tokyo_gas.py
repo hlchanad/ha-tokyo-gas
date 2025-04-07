@@ -10,7 +10,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Usage(TypedDict):
-    """Typed Dict for the daily usage"""
+    """TypedDict for the daily usage"""
     date: datetime
     usage: float
 

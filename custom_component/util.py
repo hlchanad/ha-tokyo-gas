@@ -15,6 +15,7 @@ def get_statistic_id(entry_id: str, identifier: str) -> str:
 def get_statistic_name_for_electricity_usage(
         config_entry: ConfigEntry
 ):
+    """Format the statistic name"""
     return config_entry.data.get(
         CONF_STAT_LABEL_ELECTRICITY_USAGE,
         f"Electricity Usage ({config_entry.data.get(CONF_USERNAME)})"

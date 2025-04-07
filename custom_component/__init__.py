@@ -38,7 +38,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up is called when Home Assistant is loading our component."""
 
     # Setup custom services
-    hass.services.register(DOMAIN, "fetch_electricity_usage", handle_service_fetch_electricity_usage)
+    hass.services.register(
+        DOMAIN,
+        "fetch_electricity_usage",
+        handle_service_fetch_electricity_usage
+    )
 
     return True
 
@@ -46,20 +50,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the entry (created via 'Devices/ Services')"""
 
-    _LOGGER.debug("async_setup_entry(), entry.entry_id: %s", entry.entry_id)
-    _LOGGER.debug("async_setup_entry(), entry.data: %s", entry.data)
-    _LOGGER.debug("async_setup_entry(), entry.unique_id: %s", entry.unique_id)
-    _LOGGER.debug("async_setup_entry(), entry.domain: %s", entry.domain)
-    _LOGGER.debug("async_setup_entry(), entry.source: %s", entry.source)
-    _LOGGER.debug("async_setup_entry(), entry.state: %s", entry.state)
-
-    # entry.entry_id: 01JJAZ5GWMK3WCDRZQADJVMDRH
-    # entry.data: {'username': 'test@example.com', 'password': 'aA123456'}
-    # entry.unique_id: None
-    # entry.domain: tokyo_gas
-    # entry.source: user
-    # entry.state: ConfigEntryState.SETUP_IN_PROGRESS
-
+    # Create API Client for this config_entry
     _tokyo_gas = TokyoGas(
         username=entry.data.get(CONF_USERNAME),
         password=entry.data.get(CONF_PASSWORD),
@@ -67,16 +58,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         domain=entry.data.get(CONF_DOMAIN),
     )
 
+    # Store common API client to hass.data
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"tokyo_gas": _tokyo_gas}
 
+    # Remove existing subscription if exist
     if DOMAIN in hass.data \
             and entry.entry_id in hass.data[DOMAIN] \
             and "unsubscribe" in hass.data[DOMAIN][entry.entry_id]:
         _LOGGER.debug("Somehow there is a existing schedule, unsubscribing to prevent memory leak")
         hass.data[DOMAIN][entry.entry_id]["unsubscribe"]()
 
+    # Set up the scheduler
     hour, minute, second = entry.data.get(CONF_TRIGGER_TIME).split(":")
-
     hass.data[DOMAIN][entry.entry_id]["unsubscribe"] = async_track_time_change(
         hass,
         create_schedule_handler_for_fetch_electricity_usage(hass, entry, _tokyo_gas),
@@ -84,9 +77,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         minute=minute,
         second=second,
     )
-
     _LOGGER.info("Scheduled data fetching at %s:%s:%s everyday", hour, minute, second)
 
+    # Delegate setup to each platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -95,6 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the entry (created via 'Devices/ Services')"""
 
+    # Unsubscribe and remove data if exist
     if entry.entry_id in hass.data.get(DOMAIN, {}):
         entry_data = hass.data[DOMAIN][entry.entry_id]
 
@@ -105,6 +99,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         _LOGGER.info("Cleaned up data for integration (entry_id: %s)", entry.entry_id)
 
+    # Delegate uploading to each platforms
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     return True

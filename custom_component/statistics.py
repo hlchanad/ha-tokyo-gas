@@ -24,6 +24,7 @@ def _get_last_statistics(
     """Query database to get the last statistic record, w.r.t. `date`"""
 
     with get_instance(hass).engine.connect() as connection:
+        # Get the last record OR the record right before given timestamp
         query = text("""
                SELECT 
                    s.start_ts, 
@@ -93,6 +94,7 @@ async def insert_statistics(
         cumulative_sum
     )
 
+    # Insert the new statistics records
     async_add_external_statistics(
         hass,
         metadata=StatisticMetaData(
