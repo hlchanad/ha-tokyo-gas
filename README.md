@@ -23,6 +23,7 @@ statistics to the Energy dashboard.
    instance
 2. Restart the Home Assistant instance
 3. Navigate to `Settings` > `Add-ons` > `Add-on Store` 
+
    ![addon-store](assets/addon-store.png)
 4. Install the addon
 5. By default, the server will be hosted at http://homeassistant.local:8000
@@ -33,6 +34,7 @@ statistics to the Energy dashboard.
    `/config/custom_components/tokyo_gas` in your Home Assistant instance
 2. Restart the Home Assistant instance
 3. Navigate to `Settings` > `Devices & services` > `Add Integration`
+
    ![add-integration](assets/add-integration.png)
 4. Fill in the login credentials and the domain if you updated the setting
 
@@ -45,6 +47,24 @@ ID should be used, the targeted statistic ID could be viewed in the service.
 
 ![tokyo-gas-service](assets/tokyo-gas-service.png)
 ![statistic-id](assets/statistic-id.png)
+
+### Custom Service
+
+A custom service could be triggered to fetch and insert the statistics manually.
+It would be useful when somehow the data could not be fetched. 
+
+Note that the cumulative sum of the latter records should be fixed afterward.
+
+```yaml
+action: tokyo_gas.fetch_electricity_usage
+data:
+  # number of days in the past
+  delta_days: 3 
+  # the entity id of the sensor by this integration
+  statistic: sensor.foobar_electricity_usage_stat_id
+```
+
+![service.png](assets/service.png)
 
 ## Up-coming plans
 
