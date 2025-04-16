@@ -66,6 +66,13 @@ data:
 
 ![service.png](assets/service.png)
 
+## Known Issues
+
+The scraper occasionally fails to scrape because of timeout in playwright. 
+There might be some funny handling in the TokyoGas website that I am not 
+aware of. If the CPU/ memory of the addon goes high, restart it and run the 
+custom service to fill the gaps.
+
 ## Up-coming plans
 
 - Add options for the addon (e.g. server port)
