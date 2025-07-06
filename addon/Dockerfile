@@ -29,5 +29,8 @@ RUN apk add --no-cache \
 RUN npm ci --production
 
 COPY --from=builder /app/dist /app/dist/
+COPY ./entrypoint.sh ./entrypoint.sh
 
-CMD ["npm", "start"]
+RUN chmod +x ./entrypoint.sh
+
+ENTRYPOINT ["./entrypoint.sh"]
