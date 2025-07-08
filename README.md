@@ -26,7 +26,8 @@ statistics to the Energy dashboard.
 
    ![addon-store](assets/addon-store.png)
 4. Install the addon
-5. By default, the server will be hosted at http://homeassistant.local:8000
+5. By default, the server will be hosted at http://homeassistant.local:8000. 
+   But you can also update the port in the Configuration tab.
 
 ### Custom Component
 
@@ -75,7 +76,6 @@ custom service to fill the gaps.
 
 ## Up-coming plans
 
-- Add options for the addon (e.g. server port)
 - Support options modification for custom component after initialization
 - Write test cases for all files
 - Support multiple customer number in one account
