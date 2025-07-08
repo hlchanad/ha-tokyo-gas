@@ -12,7 +12,6 @@ services:
 #        BUILD_FROM: ghcr.io/home-assistant/aarch64-base:latest # RPi
         BUILD_FROM: ghcr.io/home-assistant/amd64-base:latest # Mac
     environment:
-      - PORT=8000
-      - LOG_LEVEL=debug
+      - TZ=Asia/Tokyo
     ports:
       - '8000:8000'

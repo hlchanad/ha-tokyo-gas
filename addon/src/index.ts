@@ -1,9 +1,20 @@
+import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
 import Fastify from 'fastify';
 import { TokyoGasScraper } from './tokyo-gas-scraper';
 import { getOptions } from './config';
 
+dayjs.extend(timezone);
+dayjs.tz.setDefault(process.env.TZ ?? 'Asia/Tokyo');
+
 const fastify = Fastify({
-  logger: { level: getOptions().log_level ?? 'info' },
+  logger: {
+    level: getOptions().log_level ?? 'info',
+    timestamp: () => `,"time":"${dayjs().format('YYYY-MM-DD HH:mm:ss')}"`,
+    formatters: {
+      level: (level) => ({ level }),
+    },
+  },
 });
 
 fastify.post(
