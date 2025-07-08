@@ -30,6 +30,7 @@ RUN npm ci --production
 
 COPY --from=builder /app/dist /app/dist/
 COPY ./entrypoint.sh ./entrypoint.sh
+COPY ./options.json /data/options.json
 
 RUN chmod +x ./entrypoint.sh
 
