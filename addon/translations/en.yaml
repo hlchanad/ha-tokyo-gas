@@ -1,0 +1,9 @@
+network:
+  8000/tcp: The port where the server listens to
+configuration:
+  port:
+    name: Port
+    description: The port where the server listens to. Please put the same value as the Network Port.
+  log_level:
+    name: Log Level
+    description: Log level for the server

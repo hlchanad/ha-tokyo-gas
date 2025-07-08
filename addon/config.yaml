@@ -1,6 +1,6 @@
 name: Tokyo Gas Scraper
 description: Login to Tokyo Gas and scrape electricity usage
-version: 0.0.6
+version: 0.0.8
 slug: tokyo_gas_scraper
 init: false
 arch:

@@ -1,0 +1,9 @@
+network:
+  8000/tcp: サーバーがリッスンするポート
+configuration:
+  port:
+    name: ポート
+    description: サーバーがリッスンするポート。ネットワークポートと同じ値を入力してください。
+  log_level:
+    name: ログレベル
+    description: サーバーのログレベル
