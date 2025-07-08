@@ -1,6 +1,6 @@
 name: Tokyo Gas Scraper
 description: Login to Tokyo Gas and scrape electricity usage
-version: 0.0.0
+version: 0.0.6
 slug: tokyo_gas_scraper
 init: false
 arch:
@@ -9,5 +9,9 @@ startup: application
 boot: auto
 ports:
   8000/tcp: 8000
-options: {}
-schema: {}
+options:
+  port: 8000
+  log_level: info
+schema:
+  port: int(1001,65535)
+  log_level: list(trace|debug|info|warn|error|fatal)?

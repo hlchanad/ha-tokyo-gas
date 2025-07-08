@@ -1,8 +1,9 @@
 import Fastify from 'fastify';
 import { TokyoGasScraper } from './tokyo-gas-scraper';
+import { getOptions } from './config';
 
 const fastify = Fastify({
-  logger: { level: process.env.LOG_LEVEL },
+  logger: { level: getOptions().log_level ?? 'info' },
 });
 
 fastify.post(
@@ -58,8 +59,7 @@ fastify.get(
   },
 );
 
-const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 8000;
-fastify.listen({ host: '0.0.0.0', port })
+fastify.listen({ host: '0.0.0.0', port: getOptions().port ?? 8000 })
   .catch(err => {
     fastify.log.error(err);
     process.exit(1);
